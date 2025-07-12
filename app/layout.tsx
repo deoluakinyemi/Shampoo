@@ -5,6 +5,7 @@ import "./globals.css"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { SessionManager } from "@/components/admin/session-manager"
+import { Toaster } from "@/components/ui/toaster" // Import Toaster
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -28,6 +29,7 @@ export default function RootLayout({
         <Header />
         {children}
         <Footer />
+        <Toaster /> {/* Add Toaster component here */}
       </body>
     </html>
   )

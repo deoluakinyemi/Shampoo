@@ -4,27 +4,59 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Heart, Users, Share2, Calendar } from "lucide-react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast" // Import useToast
 
 export function CallToAction() {
+  const { toast } = useToast() // Initialize toast
+
   const handleShareCampaign = () => {
     const campaignUrl = window.location.origin // Gets the base URL of the deployed site
+    const shareTitle = "Help Rebuild FCS Church Hall - FGCI Alumni"
+    const shareText =
+      "Join me in supporting the rebuilding of our beloved FCS Church Hall at Federal Government College, Ilorin. Every contribution helps!"
 
     if (navigator.share) {
       // Use Web Share API if available
       navigator
         .share({
-          title: "Help Rebuild FCS Church Hall - FGCI Alumni",
-          text: "Join me in supporting the rebuilding of our beloved FCS Church Hall at Federal Government College, Ilorin. Every contribution helps!",
+          title: shareTitle,
+          text: shareText,
           url: campaignUrl,
         })
-        .then(() => console.log("Successful share"))
-        .catch((error) => console.log("Error sharing:", error))
+        .then(() => {
+          toast({
+            title: "Campaign Shared!",
+            description: "Thank you for spreading the word.",
+            variant: "default",
+          })
+        })
+        .catch((error) => {
+          console.error("Error sharing:", error)
+          toast({
+            title: "Sharing Cancelled or Failed",
+            description: "Could not share the campaign. Please try copying the link.",
+            variant: "destructive",
+          })
+        })
     } else {
       // Fallback for browsers that don't support Web Share API
       navigator.clipboard
         .writeText(campaignUrl)
-        .then(() => alert("Campaign link copied to clipboard! Share it with your network."))
-        .catch((error) => console.error("Failed to copy:", error))
+        .then(() => {
+          toast({
+            title: "Link Copied!",
+            description: "The campaign link has been copied to your clipboard. Share it with your network!",
+            variant: "default",
+          })
+        })
+        .catch((error) => {
+          console.error("Failed to copy:", error)
+          toast({
+            title: "Failed to Copy Link",
+            description: "Please manually copy the URL from your browser's address bar.",
+            variant: "destructive",
+          })
+        })
     }
   }
 
@@ -79,7 +111,7 @@ export function CallToAction() {
               <Button
                 variant="outline"
                 className="border-white text-white hover:bg-white hover:text-slate-900 w-full bg-transparent"
-                onClick={handleShareCampaign} // Added onClick handler
+                onClick={handleShareCampaign}
               >
                 Share Campaign
               </Button>
