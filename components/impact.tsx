@@ -19,7 +19,7 @@ export function Impact() {
     {
       icon: Calendar,
       label: "Target Timeline",
-      value: "12 Months",
+      value: "6 Months", // Changed from "12 Months"
       description: "From fundraising to completion",
     },
     {
