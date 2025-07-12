@@ -1,9 +1,33 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Heart, Users, Share2, Calendar } from "lucide-react"
 import Link from "next/link"
 
 export function CallToAction() {
+  const handleShareCampaign = () => {
+    const campaignUrl = window.location.origin // Gets the base URL of the deployed site
+
+    if (navigator.share) {
+      // Use Web Share API if available
+      navigator
+        .share({
+          title: "Help Rebuild FCS Church Hall - FGCI Alumni",
+          text: "Join me in supporting the rebuilding of our beloved FCS Church Hall at Federal Government College, Ilorin. Every contribution helps!",
+          url: campaignUrl,
+        })
+        .then(() => console.log("Successful share"))
+        .catch((error) => console.log("Error sharing:", error))
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard
+        .writeText(campaignUrl)
+        .then(() => alert("Campaign link copied to clipboard! Share it with your network."))
+        .catch((error) => console.error("Failed to copy:", error))
+    }
+  }
+
   return (
     <section className="py-20 bg-gradient-to-br from-slate-800 via-blue-900 to-slate-900 text-white">
       <div className="container mx-auto px-4">
@@ -55,6 +79,7 @@ export function CallToAction() {
               <Button
                 variant="outline"
                 className="border-white text-white hover:bg-white hover:text-slate-900 w-full bg-transparent"
+                onClick={handleShareCampaign} // Added onClick handler
               >
                 Share Campaign
               </Button>
