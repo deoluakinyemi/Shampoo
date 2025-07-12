@@ -18,7 +18,7 @@ export function Story() {
         <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
           <div>
             <Image
-              src="/placeholder.svg?height=400&width=600"
+              src="/images/story/hall-before-damage.png"
               alt="FCS Church Hall before damage"
               width={600}
               height={400}
@@ -28,8 +28,8 @@ export function Story() {
           <div>
             <h3 className="text-3xl font-bold text-slate-800 mb-6">The Heart of Our Fellowship</h3>
             <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-              Every Sunday morning, Wednesday evening, and special occasion, this hall echoed with prayers, songs, and
-              testimonies. It witnessed baptisms, confirmations, and countless moments of spiritual transformation.
+              Every Sunday morning and special occasions, this hall echoed with prayers, songs, and testimonies. It
+              witnessed altar calls, repentance, newly found faith, and countless moments of spiritual transformation.
             </p>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
@@ -73,7 +73,7 @@ export function Story() {
           </div>
           <div className="order-1 md:order-2">
             <Image
-              src="/placeholder.svg?height=400&width=600"
+              src="/images/story/hall-after-storm-damage.png"
               alt="FCS Church Hall after storm damage"
               width={600}
               height={400}
