@@ -84,6 +84,20 @@ export function DonationForm() {
           message: result.message || "Your donation pledge has been submitted successfully!",
         })
 
+        // Prepare URL parameters for success page
+        const params = new URLSearchParams()
+        if (formData.fullName && !formData.anonymous) {
+          params.append("name", formData.fullName)
+        }
+        if (formData.graduationSet) {
+          params.append("set", formData.graduationSet)
+        }
+        if (formData.amount === "custom" && formData.customAmount) {
+          params.append("amount", formData.customAmount)
+        } else if (formData.amount) {
+          params.append("amount", formData.amount)
+        }
+
         // Reset form
         setFormData({
           fullName: "",
@@ -99,10 +113,10 @@ export function DonationForm() {
           message: "",
         })
 
-        // Redirect to thank you page after 3 seconds
+        // Redirect to success page with donor information
         setTimeout(() => {
-          router.push("/?success=true")
-        }, 3000)
+          router.push(`/success?${params.toString()}`)
+        }, 2000)
       } else {
         setSubmitStatus({
           type: "error",
