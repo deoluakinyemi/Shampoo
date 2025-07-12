@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
-import { Heart, CreditCard } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Heart, CreditCard, CheckCircle, AlertCircle, Loader2 } from "lucide-react"
 
 export function DonationForm() {
   const [formData, setFormData] = useState({
@@ -20,12 +22,21 @@ export function DonationForm() {
     phone: "",
     graduationSet: "",
     amount: "",
+    customAmount: "",
     paymentPlan: "",
     paymentDates: "",
     alreadyPaid: false,
     anonymous: false,
     message: "",
   })
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: "success" | "error" | null
+    message: string
+  }>({ type: null, message: "" })
+
+  const router = useRouter()
 
   const graduationSets = Array.from({ length: 52 }, (_, i) => 1973 + i)
 
@@ -38,10 +49,75 @@ export function DonationForm() {
     { value: "custom", label: "Custom Amount" },
   ]
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log("Form submitted:", formData)
+    setIsSubmitting(true)
+    setSubmitStatus({ type: null, message: "" })
+
+    try {
+      // Validate custom amount if selected
+      if (formData.amount === "custom" && (!formData.customAmount || Number.parseInt(formData.customAmount) < 1000)) {
+        setSubmitStatus({
+          type: "error",
+          message: "Please enter a valid custom amount (minimum ₦1,000)",
+        })
+        setIsSubmitting(false)
+        return
+      }
+
+      const response = await fetch("/api/donations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          customAmount: formData.amount === "custom" ? Number.parseInt(formData.customAmount) : undefined,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setSubmitStatus({
+          type: "success",
+          message: result.message || "Your donation pledge has been submitted successfully!",
+        })
+
+        // Reset form
+        setFormData({
+          fullName: "",
+          email: "",
+          phone: "",
+          graduationSet: "",
+          amount: "",
+          customAmount: "",
+          paymentPlan: "",
+          paymentDates: "",
+          alreadyPaid: false,
+          anonymous: false,
+          message: "",
+        })
+
+        // Redirect to thank you page after 3 seconds
+        setTimeout(() => {
+          router.push("/?success=true")
+        }, 3000)
+      } else {
+        setSubmitStatus({
+          type: "error",
+          message: result.error || "Failed to submit donation. Please try again.",
+        })
+      }
+    } catch (error) {
+      console.error("Error submitting donation:", error)
+      setSubmitStatus({
+        type: "error",
+        message: "Network error. Please check your connection and try again.",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -53,6 +129,23 @@ export function DonationForm() {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-8">
+        {submitStatus.type && (
+          <Alert
+            className={`mb-6 ${
+              submitStatus.type === "success" ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"
+            }`}
+          >
+            {submitStatus.type === "success" ? (
+              <CheckCircle className="w-4 h-4 text-green-600" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-red-600" />
+            )}
+            <AlertDescription className={submitStatus.type === "success" ? "text-green-800" : "text-red-800"}>
+              {submitStatus.message}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Personal Information */}
           <div className="space-y-4">
@@ -66,6 +159,7 @@ export function DonationForm() {
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div>
@@ -73,6 +167,7 @@ export function DonationForm() {
                 <Select
                   value={formData.graduationSet}
                   onValueChange={(value) => setFormData({ ...formData, graduationSet: value })}
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select your set" />
@@ -97,6 +192,7 @@ export function DonationForm() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div>
@@ -105,6 +201,7 @@ export function DonationForm() {
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -118,10 +215,11 @@ export function DonationForm() {
               value={formData.amount}
               onValueChange={(value) => setFormData({ ...formData, amount: value })}
               className="grid grid-cols-2 md:grid-cols-3 gap-4"
+              disabled={isSubmitting}
             >
               {predefinedAmounts.map((amount) => (
                 <div key={amount.value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={amount.value} id={amount.value} />
+                  <RadioGroupItem value={amount.value} id={amount.value} disabled={isSubmitting} />
                   <Label htmlFor={amount.value} className="cursor-pointer">
                     {amount.label}
                   </Label>
@@ -132,7 +230,15 @@ export function DonationForm() {
             {formData.amount === "custom" && (
               <div>
                 <Label htmlFor="customAmount">Custom Amount (₦)</Label>
-                <Input id="customAmount" type="number" placeholder="Enter amount" min="1000" />
+                <Input
+                  id="customAmount"
+                  type="number"
+                  placeholder="Enter amount"
+                  min="1000"
+                  value={formData.customAmount}
+                  onChange={(e) => setFormData({ ...formData, customAmount: e.target.value })}
+                  disabled={isSubmitting}
+                />
               </div>
             )}
           </div>
@@ -144,21 +250,22 @@ export function DonationForm() {
             <RadioGroup
               value={formData.paymentPlan}
               onValueChange={(value) => setFormData({ ...formData, paymentPlan: value })}
+              disabled={isSubmitting}
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="one-time" id="one-time" />
+                <RadioGroupItem value="one-time" id="one-time" disabled={isSubmitting} />
                 <Label htmlFor="one-time" className="cursor-pointer">
                   One-time payment
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="monthly" id="monthly" />
+                <RadioGroupItem value="monthly" id="monthly" disabled={isSubmitting} />
                 <Label htmlFor="monthly" className="cursor-pointer">
                   Monthly installments (2-6 months)
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="three-part" id="three-part" />
+                <RadioGroupItem value="three-part" id="three-part" disabled={isSubmitting} />
                 <Label htmlFor="three-part" className="cursor-pointer">
                   Three-part split payment
                 </Label>
@@ -173,6 +280,7 @@ export function DonationForm() {
                   placeholder="e.g., July 31st, August 31st, September 30th, October 31st, November 30th, December 31st"
                   value={formData.paymentDates}
                   onChange={(e) => setFormData({ ...formData, paymentDates: e.target.value })}
+                  disabled={isSubmitting}
                 />
               </div>
             )}
@@ -185,6 +293,7 @@ export function DonationForm() {
                 id="alreadyPaid"
                 checked={formData.alreadyPaid}
                 onCheckedChange={(checked) => setFormData({ ...formData, alreadyPaid: checked as boolean })}
+                disabled={isSubmitting}
               />
               <Label htmlFor="alreadyPaid" className="cursor-pointer">
                 I have already made a payment and want to contribute more
@@ -196,6 +305,7 @@ export function DonationForm() {
                 id="anonymous"
                 checked={formData.anonymous}
                 onCheckedChange={(checked) => setFormData({ ...formData, anonymous: checked as boolean })}
+                disabled={isSubmitting}
               />
               <Label htmlFor="anonymous" className="cursor-pointer">
                 Keep my contribution anonymous on the leaderboard
@@ -212,12 +322,22 @@ export function DonationForm() {
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               rows={4}
+              disabled={isSubmitting}
             />
           </div>
 
-          <Button type="submit" size="lg" className="w-full bg-amber-600 hover:bg-amber-700">
-            <CreditCard className="w-5 h-5 mr-2" />
-            Submit Pledge Commitment
+          <Button type="submit" size="lg" className="w-full bg-amber-600 hover:bg-amber-700" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Submitting Pledge...
+              </>
+            ) : (
+              <>
+                <CreditCard className="w-5 h-5 mr-2" />
+                Submit Pledge Commitment
+              </>
+            )}
           </Button>
         </form>
       </CardContent>

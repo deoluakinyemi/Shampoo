@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DonationEntries } from "@/components/admin/donation-entries"
@@ -24,6 +23,7 @@ import {
   LogOut,
   Shield,
 } from "lucide-react"
+import { RealTimeStats } from "@/components/admin/real-time-stats"
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
@@ -132,26 +132,7 @@ export function AdminDashboard() {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {stats.map((stat, index) => (
-                <Card key={index}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-slate-600">{stat.title}</p>
-                        <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                        <p className={`text-sm ${stat.color}`}>{stat.change}</p>
-                      </div>
-                      <div className={`p-3 rounded-full bg-slate-100 ${stat.color}`}>
-                        <stat.icon className="w-6 h-6" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
+            <RealTimeStats />
             <Analytics />
           </TabsContent>
 
